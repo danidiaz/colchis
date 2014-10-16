@@ -25,6 +25,6 @@ adaptToJSONRPC20 = evalStateP 0 `liftM` go
   where
     go (method,j) = do 
         msgId <- freshId                                
-        _
+        undefined 
     freshId = lift $ withStateT (flip mod 100 . succ) get
 
