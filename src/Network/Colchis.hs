@@ -4,6 +4,7 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Network.Colchis ()  where
 
@@ -11,8 +12,10 @@ import Data.Text
 import Data.Aeson
 import Control.Monad
 import Control.Monad.Trans.Except
+import Control.Monad.Trans.State.Strict
 import Pipes
 import Pipes.Core
+import Pipes.Lift
 import qualified Pipes.Prelude as P
 import Pipes.Aeson
 
@@ -33,7 +36,16 @@ upstream f = go
 
 type JSONRPC20Error = ()
 
-type JSONRPC20Adapter s m = (s,Value) -> Proxy Value Value (s,Value) (ExceptT JSONRPC20Error m) Value
+type JSONRPC20Adapter s m = forall r. (s,Value) -> Proxy Value Value (s,Value) Value (ExceptT JSONRPC20Error m) r
 
+-- http://www.jsonrpc.org/specification
 adaptToJSONRPC20 :: Monad m => ((s,Value) -> (Text,Value)) -> JSONRPC20Adapter s m
-adaptToJSONRPC20 = undefined
+adaptToJSONRPC20 f = evalStateP 0 `liftM` go 
+  where
+    go (f -> (method,j)) = do 
+        msgId <- freshId                                
+        _
+    freshId = lift $ withStateT (flip mod 100 . succ) get
+
+
+
