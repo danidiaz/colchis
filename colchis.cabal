@@ -20,6 +20,8 @@ Library
     hs-source-dirs: src
     exposed-modules: 
         Network.Colchis
+        Network.Colchis.Adapter
+        Network.Colchis.Adapter.JSONRPC20
     other-modules: 
     build-depends:         
         base >= 4.4 && < 5,

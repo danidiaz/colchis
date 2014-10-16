@@ -6,7 +6,12 @@
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Network.Colchis ()  where
+module Network.Colchis (
+        JSONClient (..)
+   ,    call
+   ,    umap
+   ,    umapM
+   )  where
 
 import Data.Text
 import Data.Aeson
@@ -28,24 +33,15 @@ call s a = do
         Error msg -> lift $ throwE (msg,rj)     
         Success r -> return r     
 
-upstream :: Monad m => (b' -> a') -> b' -> Proxy a' x b' x m r
-upstream f = go
+umap :: Monad m => (b' -> a') -> b' -> Proxy a' x b' x m r
+umap f = go
   where
     go b = request (f b) >>= respond >>= go
 
-
-type JSONRPC20Error = ()
-
-type JSONRPC20Adapter s m = forall r. (s,Value) -> Proxy Value Value (s,Value) Value (ExceptT JSONRPC20Error m) r
-
--- http://www.jsonrpc.org/specification
-adaptToJSONRPC20 :: Monad m => ((s,Value) -> (Text,Value)) -> JSONRPC20Adapter s m
-adaptToJSONRPC20 f = evalStateP 0 `liftM` go 
+umapM :: Monad m => (b' -> m a') -> b' -> Proxy a' x b' x m r
+umapM f = go
   where
-    go (f -> (method,j)) = do 
-        msgId <- freshId                                
-        _
-    freshId = lift $ withStateT (flip mod 100 . succ) get
+    go b = lift (f b) >>= request >>= respond >>= go
 
 
 
