@@ -21,7 +21,7 @@ data Response = Response
         {  _jsonrpc :: Text
         ,  _result  :: Maybe Value
         ,  _error :: Maybe ErrorObject
-        ,  _id :: Int
+        ,  _id :: Value
         } deriving (Generic,Show)
 
 options = defaultOptions { fieldLabelModifier = Prelude.tail , omitNothingFields = True }

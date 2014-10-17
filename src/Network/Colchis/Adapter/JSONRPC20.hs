@@ -6,7 +6,7 @@ module Network.Colchis.Adapter.JSONRPC20 (
       module Network.Colchis.Adapter
     , IN.ErrorObject (..)
     , JSONRPC20Error (..)
-    , adaptToJSONRPC20  
+    , jsonRPC20  
     ) where
 
 import Network.Colchis.Adapter
@@ -33,10 +33,10 @@ data JSONRPC20Error =
        deriving (Show)
 
 -- http://www.jsonrpc.org/specification
-adaptToJSONRPC20 :: Monad m => Adapter Text (Text,Value,JSONRPC20Error) m
-adaptToJSONRPC20 = evalStateP 0 `liftM` go 
+jsonRPC20 :: Monad m => Adapter Text (Text,Value,JSONRPC20Error) m
+jsonRPC20 = evalStateP 0 `liftM` go 
   where
-    go (method,j) = do 
+    go (method,mkStructured -> j) = do 
         msgId <- freshId                                
         let req = OUT.Request protocolVer method j msgId
         jresp <- request $ toJSON req
@@ -46,17 +46,23 @@ adaptToJSONRPC20 = evalStateP 0 `liftM` go
             Right (IN.Response p' rm' em' id') -> do
                 if protocolVer /= p' 
                     then throwE' $ ProtocolMismatch p'
-                    else do
-                      if msgId /= id'
-                          then throwE' $ ResponseIdMismatch msgId id'
-                          else do
-                            case em' of 
-                              Just err -> throwE' $ ErrorResponse err
-                              Nothing -> case rm' of
-                                 Nothing -> throwE' $ 
-                                    MalformedResponse "missing fields" jresp
-                                 Just val -> respond val >>= go 
+                    else case em' of 
+                      Just err -> throwE' $ ErrorResponse err
+                      Nothing -> case rm' of
+                         Nothing -> throwE' $ 
+                            MalformedResponse "missing fields" jresp
+                         Just val -> case parseEither parseJSON id' of 
+                            Left str -> throwE' $ 
+                              MalformedResponse "wrong id" jresp
+                            Right i -> if msgId /= i
+                              then throwE' $ ResponseIdMismatch msgId i
+                              else respond val >>= go 
     freshId = lift $ withStateT (flip mod 100 . succ) get
     protocolVer = "2.0"
+    mkStructured j = case j of
+        o@Object {} -> o
+        a@Array {} -> a        
+        Null -> emptyArray
+        x -> toJSON $ [x]
 
 
