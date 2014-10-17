@@ -24,6 +24,7 @@ Library
         Network.Colchis.Adapter.JSONRPC20
         Network.Colchis.Adapter.JSONRPC20.Request
         Network.Colchis.Adapter.JSONRPC20.Response
+        Network.Colchis.Transport.TCP
     other-modules: 
     build-depends:         
         base >= 4.4 && < 5,
