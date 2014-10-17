@@ -38,8 +38,7 @@ jsonRPC20 = evalStateP 0 `liftM` go
   where
     go (method,mkStructured -> j) = do 
         msgId <- freshId                                
-        let req = OUT.Request protocolVer method j msgId
-        jresp <- request $ toJSON req
+        jresp <- request . toJSON $ OUT.Request protocolVer method j msgId
         let throwE' x = lift . lift . throwE $ (method,j,x)
         case parseEither parseJSON jresp of
             Left str -> throwE' $ MalformedResponse (pack str) jresp
@@ -53,7 +52,7 @@ jsonRPC20 = evalStateP 0 `liftM` go
                             MalformedResponse "missing fields" jresp
                          Just val -> case parseEither parseJSON id' of 
                             Left str -> throwE' $ 
-                              MalformedResponse "wrong id" jresp
+                              MalformedResponse "strange id" jresp
                             Right i -> if msgId /= i
                               then throwE' $ ResponseIdMismatch msgId i
                               else respond val >>= go 
