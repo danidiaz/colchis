@@ -4,6 +4,7 @@
 
 module Network.Colchis.Adapter.JSONRPC20 (
       module Network.Colchis.Adapter
+    , IN.ErrorObject (..)
     , JSONRPC20Error (..)
     , adaptToJSONRPC20  
     ) where
