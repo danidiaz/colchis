@@ -24,13 +24,13 @@ import Pipes.Lift
 import qualified Pipes.Prelude as P
 import Pipes.Aeson
 
-type JSONClient s m r = Client (s,Value) Value (ExceptT (String,Value) m) r  
+type JSONClient s m r = Client (s,Value) Value (ExceptT (Text,Value) m) r  
 
 call :: (ToJSON a, FromJSON r, Monad m) => s -> a -> JSONClient s m r  
 call s a = do
     rj <- request (s,toJSON a)
     case fromJSON rj of
-        Error msg -> lift $ throwE (msg,rj)     
+        Error msg -> lift $ throwE (pack msg,rj)     
         Success r -> return r     
 
 umap :: Monad m => (b' -> a') -> b' -> Proxy a' x b' x m r
