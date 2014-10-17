@@ -31,6 +31,18 @@ type TcpTransport m = ReaderT (MVar (Maybe Value),MVar Value) m
 
 type TcpTransportServer m = forall r. Value -> Server Value Value (TcpTransport m) r
 
+mVarProducer :: MVar (Maybe a) -> Producer a IO () 
+mVarProducer reqMVar = go
+  where 
+    go = do
+       mj <- liftIO $ readMVar reqMVar 
+       case mj of 
+           Nothing -> return ()
+           Just j -> yield j >> go
+
+mVarConsumer :: MVar a -> Consumer a IO x 
+mVarConsumer respMVar = forever $ await >>= liftIO . putMVar respMVar 
+
 runTcpTransport :: HostName -> ServiceName -> TcpTransport IO r -> IO r 
 runTcpTransport host port transport = 
     withSocketsDo $ connect host port $ \(sock,sockaddr) -> do
@@ -47,16 +59,4 @@ runTcpTransport host port transport =
             )
             <*
             (Concurrently undefined)
-    where
-        reqProducer :: MVar (Maybe Value) -> Producer Value IO () 
-        reqProducer reqMVar = go
-          where 
-            go = do
-               mj <- liftIO $ readMVar reqMVar 
-               case mj of 
-                   Nothing -> return ()
-                   Just j -> yield j >> go
-        respConsumer :: MVar Value -> Consumer Value IO x 
-        respConsumer respMVar = forever $ 
-            await >>= liftIO . putMVar respMVar 
 
