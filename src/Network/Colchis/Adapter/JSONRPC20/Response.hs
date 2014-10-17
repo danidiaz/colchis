@@ -15,14 +15,14 @@ data ErrorObject = ErrorObject
         {  _code :: Int
         ,  _message :: Text
         ,  _data :: Maybe Value
-        } deriving (Generic)
+        } deriving (Generic,Show)
 
 data Response = Response 
         {  _jsonrpc :: Text
         ,  _result  :: Maybe Value
         ,  _error :: Maybe ErrorObject
         ,  _id :: Int
-        } deriving (Generic)
+        } deriving (Generic,Show)
 
 options = defaultOptions { fieldLabelModifier = Prelude.tail , omitNothingFields = True }
 
