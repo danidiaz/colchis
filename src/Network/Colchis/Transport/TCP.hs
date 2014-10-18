@@ -17,6 +17,8 @@ import Data.Bifunctor
 import Data.Text
 import Data.Aeson
 import Data.Aeson.Encode
+import Data.IORef
+import Data.Typeable
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Trans.Reader
@@ -25,6 +27,7 @@ import Control.Monad.Trans.State.Strict
 import Control.Concurrent.MVar
 import Control.Concurrent.Async
 import Control.Concurrent.Conceit
+import Network.Socket (close)
 import Pipes
 import Pipes.Attoparsec
 import Pipes.Core
@@ -35,9 +38,21 @@ import qualified Pipes.Prelude as P
 import Pipes.Aeson
 import Pipes.Aeson.Unchecked
 
-type TcpTransport m = ReaderT (MVar (Maybe Value),MVar Value) m 
+type TcpTransport m = ReaderT (MVar (Maybe Value),MVar Value,IORef ConnState) m 
 
 type TcpTransportServer m = (MonadIO m) => forall r. Value -> Server Value Value (TcpTransport m) r
+
+data TransportError =
+          RequestParsingError ParsingError
+        | UnexpectedData 
+        | UnexpectedSocketClose
+        deriving (Typeable,Show)
+
+data ConnState =
+          Idle
+        | RequestSent
+        | Finished
+        deriving (Show)
 
 producerFromMVar :: MVar (Maybe a) -> Producer a IO () 
 producerFromMVar reqMVar = go
@@ -57,20 +72,29 @@ tcpTransportServer :: TcpTransportServer m
 tcpTransportServer = go
   where
     go req = do
-        (reqMVar,respMVar) <- lift ask
+        (reqMVar,respMVar,connState) <- lift ask
+        liftIO $ atomicWriteIORef connState RequestSent  
         liftIO $ putMVar reqMVar (Just req)
-        liftIO (readMVar respMVar) >>= respond >>= go 
+        resp <- liftIO (readMVar respMVar) 
+        liftIO $ atomicWriteIORef connState Idle
+        respond resp >>= go 
 
-runTcpTransport :: HostName -> ServiceName -> TcpTransport IO r -> IO (Either ParsingError r) 
+
+runTcpTransport :: HostName -> ServiceName -> TcpTransport IO r -> IO (Either TransportError r) 
 runTcpTransport host port transport = 
     withSocketsDo $ connect host port $ \(sock,sockaddr) -> do
         reqMVar <- newEmptyMVar
         respMVar <- newEmptyMVar
+        connState <- newIORef Idle 
         runConceit $ 
             (Conceit $ fmap pure $ do
-                flip runReaderT (reqMVar,respMVar) transport
+                flip runReaderT (reqMVar,respMVar,connState) transport
+                <*
+                atomicWriteIORef connState Finished
                 <*
                 putMVar reqMVar Nothing
+                <* 
+                close sock
             )
             <*
             (Conceit $ fmap pure $ runEffect $
@@ -79,14 +103,14 @@ runTcpTransport host port transport =
                 toSocketLazy sock
             )
             <*
-            (Conceit $ fmap (first (parsingError . fst)) $ runEffect $ 
+            (Conceit $ fmap (first mkParsingError) $ runEffect $ 
                 view Pipes.Aeson.Unchecked.decoded (fromSocket sock 4096)
                 >->
                 consumerFromMVar respMVar
             )
   where
-    parsingError de = case de of
-        AttoparsecError pe -> pe
+    mkParsingError (de,_) = RequestParsingError $ case de of
+        AttoparsecError pe -> pe 
         FromJSONError _ -> error "never happens"  
     view l = getConst . l Const
 
