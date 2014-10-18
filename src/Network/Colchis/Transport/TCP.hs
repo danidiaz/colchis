@@ -9,8 +9,10 @@
 module Network.Colchis.Transport.TCP (
         TcpTransport
     ,   TcpTransportServer
+    ,   tcpTransportServer 
     ,   runTcpTransport
     ,   ParsingError(..)
+    ,   TransportError(..)
     )  where
 
 import Data.Bifunctor
@@ -32,6 +34,7 @@ import Pipes
 import Pipes.Attoparsec
 import Pipes.Core
 import Pipes.Lift
+import Pipes.Internal (unsafeHoist)
 import Pipes.ByteString as PB
 import Pipes.Network.TCP
 import qualified Pipes.Prelude as P
@@ -45,7 +48,7 @@ type TcpTransportServer m = (MonadIO m) => forall r. Value -> Server Value Value
 data TransportError =
           RequestParsingError ParsingError
         | UnexpectedData 
-        | UnexpectedSocketClose
+        | UnexpectedConnectionClose
         deriving (Typeable,Show)
 
 data ConnState =
@@ -98,19 +101,41 @@ runTcpTransport host port transport =
             )
             <*
             (Conceit $ fmap pure $ runEffect $
-                for (producerFromMVar reqMVar) (yield . Data.Aeson.Encode.encode)
+                for (producerFromMVar reqMVar) 
+                    (yield . Data.Aeson.Encode.encode)
                 >->
                 toSocketLazy sock
             )
             <*
-            (Conceit $ fmap (first mkParsingError) $ runEffect $ 
-                view Pipes.Aeson.Unchecked.decoded (fromSocket sock 4096)
+            (Conceit $ runEffect $ runExceptP $ 
+                (jsonProducerFromSocket sock <* isPrematureClose connState) 
                 >->
-                consumerFromMVar respMVar
+                connStateCheckerPipe connState
+                >->
+                hoist lift (consumerFromMVar respMVar)
             )
   where
+    jsonProducerFromSocket sock = 
+        hoist (withExceptT mkParsingError) $ 
+        exceptP $
+        view Pipes.Aeson.Unchecked.decoded (fromSocket sock 4096)
+    isPrematureClose ior = do
+        connState <- liftIO $ readIORef ior 
+        case connState of
+            Finished -> return ()
+            _ -> lift $ throwE UnexpectedConnectionClose
+    connStateCheckerPipe ior = forever $ do
+        resp <- await
+        connState <- liftIO $ readIORef ior 
+        case connState of
+            RequestSent -> yield resp
+            _ -> lift $ throwE UnexpectedData
     mkParsingError (de,_) = RequestParsingError $ case de of
         AttoparsecError pe -> pe 
         FromJSONError _ -> error "never happens"  
     view l = getConst . l Const
+    runExceptP = runExceptT . distribute
+    exceptP p = do
+        x <- unsafeHoist lift p
+        lift $ ExceptT (return x)
 
