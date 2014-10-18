@@ -7,8 +7,13 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Network.Colchis.Transport.TCP (
+        TcpTransport
+    ,   TcpTransportServer
+    ,   runTcpTransport
+    ,   ParsingError(..)
     )  where
 
+import Data.Bifunctor
 import Data.Text
 import Data.Aeson
 import Data.Aeson.Encode
@@ -27,14 +32,15 @@ import Pipes.Lift
 import Pipes.ByteString as PB
 import Pipes.Network.TCP
 import qualified Pipes.Prelude as P
+import Pipes.Aeson
 import Pipes.Aeson.Unchecked
 
 type TcpTransport m = ReaderT (MVar (Maybe Value),MVar Value) m 
 
-type TcpTransportServer m = forall r. Value -> Server Value Value (TcpTransport m) r
+type TcpTransportServer m = (MonadIO m) => forall r. Value -> Server Value Value (TcpTransport m) r
 
-mVarProducer :: MVar (Maybe a) -> Producer a IO () 
-mVarProducer reqMVar = go
+producerFromMVar :: MVar (Maybe a) -> Producer a IO () 
+producerFromMVar reqMVar = go
   where 
     go = do
        mj <- liftIO $ readMVar reqMVar 
@@ -44,8 +50,16 @@ mVarProducer reqMVar = go
                yield j
                go
 
-mVarConsumer :: MVar a -> Consumer a IO x 
-mVarConsumer respMVar = forever $ await >>= liftIO . putMVar respMVar 
+consumerFromMVar :: MVar a -> Consumer a IO x 
+consumerFromMVar respMVar = forever $ await >>= liftIO . putMVar respMVar 
+
+tcpTransportServer :: TcpTransportServer m
+tcpTransportServer = go
+  where
+    go req = do
+        (reqMVar,respMVar) <- lift ask
+        liftIO $ putMVar reqMVar (Just req)
+        liftIO (readMVar respMVar) >>= respond >>= go 
 
 runTcpTransport :: HostName -> ServiceName -> TcpTransport IO r -> IO (Either ParsingError r) 
 runTcpTransport host port transport = 
@@ -60,10 +74,19 @@ runTcpTransport host port transport =
             )
             <*
             (Conceit $ fmap pure $ runEffect $
-                for (mVarProducer reqMVar) (yield . Data.Aeson.Encode.encode)
+                for (producerFromMVar reqMVar) (yield . Data.Aeson.Encode.encode)
                 >->
                 toSocketLazy sock
             )
             <*
-            (Conceit undefined)
+            (Conceit $ fmap (first (parsingError . fst)) $ runEffect $ 
+                view Pipes.Aeson.Unchecked.decoded (fromSocket sock 4096)
+                >->
+                consumerFromMVar respMVar
+            )
+  where
+    parsingError de = case de of
+        AttoparsecError pe -> pe
+        FromJSONError _ -> error "never happens"  
+    view l = getConst . l Const
 
