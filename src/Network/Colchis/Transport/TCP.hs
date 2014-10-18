@@ -7,12 +7,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Network.Colchis.Transport.TCP (
-        TcpTransport
-    ,   TcpTransportServer
+        TcpTransportServer
+    ,   TcpTransport
     ,   tcpTransportServer 
     ,   runTcpTransport
-    ,   ParsingError(..)
     ,   TransportError(..)
+    ,   ParsingError(..)
     )  where
 
 import Data.Bifunctor
