@@ -9,7 +9,7 @@
 module Network.Colchis.Transport.TCP (
         module Network.Colchis.Transport
     ,   TcpTransport
-    ,   tcpTransportServer 
+    ,   tcpTransport
     ,   runTcpTransport
     ,   TransportError(..)
     ,   ParsingError(..)
@@ -70,8 +70,8 @@ producerFromMVar reqMVar = go
 consumerFromMVar :: MVar a -> Consumer a IO x 
 consumerFromMVar respMVar = forever $ await >>= liftIO . putMVar respMVar 
 
-tcpTransportServer :: TransportServer TcpTransport m
-tcpTransportServer = go
+tcpTransport :: Transport TcpTransport m
+tcpTransport = go
   where
     go req = do
         (reqMVar,respMVar,connState) <- lift ask

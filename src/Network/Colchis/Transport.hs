@@ -7,7 +7,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Network.Colchis.Transport (
-        TransportServer(..)        
+        Transport(..)        
     )  where
 
 import Data.Text
@@ -21,4 +21,4 @@ import Pipes.Lift
 import qualified Pipes.Prelude as P
 import Pipes.Aeson
 
-type TransportServer t m = (MonadIO m) => forall r. Value -> Server Value Value (t m) r
+type Transport t m = (MonadIO m) => forall r. Value -> Server Value Value (t m) r

@@ -24,7 +24,7 @@ exampleClient = do
 main :: IO ()
 main = do
    r <- runTcpTransport "localhost" "26060" $ 
-            runJSONClient tcpTransportServer jsonRPC20 exampleClient
+            runJSONClient tcpTransport jsonRPC20 exampleClient
    case r of
        Right (Right (Right i)) -> putStrLn $ "result: " ++ show i
        e -> putStrLn $ show e

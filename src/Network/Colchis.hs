@@ -10,7 +10,7 @@ module Network.Colchis (
    ,    JSONClientError (..)
    ,    call
    ,    Adapter
-   ,    TransportServer
+   ,    Transport
    ,    runJSONClient
    ,    umap
    ,    umapM
@@ -52,7 +52,7 @@ umapM f = go
   where
     go b = lift (f b) >>= request >>= respond >>= go
 
-runJSONClient :: (MonadTrans t, MFunctor t, MonadIO m, Monad (t m)) => TransportServer t m -> Adapter s m ea -> JSONClient s m r -> t m (Either ea (Either JSONClientError r)) 
+runJSONClient :: (MonadTrans t, MFunctor t, MonadIO m, Monad (t m)) => Transport t m -> Adapter s m ea -> JSONClient s m r -> t m (Either ea (Either JSONClientError r)) 
 runJSONClient server adapter client = 
     runExceptT $ 
     runExceptT $
