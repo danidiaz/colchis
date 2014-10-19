@@ -60,7 +60,7 @@ producerFromMVar :: MVar (Maybe a) -> Producer a IO ()
 producerFromMVar reqMVar = go
   where 
     go = do
-       mj <- liftIO $ readMVar reqMVar 
+       mj <- liftIO $ takeMVar reqMVar 
        case mj of 
            Nothing -> return ()
            Just j -> do
@@ -77,7 +77,7 @@ tcpTransportServer = go
         (reqMVar,respMVar,connState) <- lift ask
         liftIO $ atomicWriteIORef connState RequestSent  
         liftIO $ putMVar reqMVar (Just req)
-        resp <- liftIO (readMVar respMVar) 
+        resp <- liftIO (takeMVar respMVar) 
         liftIO $ atomicWriteIORef connState Idle
         respond resp >>= go 
 
