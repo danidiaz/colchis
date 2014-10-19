@@ -6,7 +6,7 @@ import Data.Text
 
 import Network.Colchis
 import Network.Colchis.Protocol.JSONRPC20(jsonRPC20)
-import Network.Colchis.Transport.TCP (runTcpTransport,tcpTransport)
+import Network.Colchis.Transport.TCP (runTcp,tcp)
 
 import Control.Monad.IO.Class
 import Control.Monad.Trans
@@ -39,15 +39,15 @@ exampleClient2 = do
 
 main :: IO ()
 main = do
-   r <- runTcpTransport "localhost" "26060" $ 
-            runJSONClient tcpTransport jsonRPC20 exampleClient
+   r <- runTcp "localhost" "26060" $ 
+            runJSONClient tcp jsonRPC20 exampleClient
    case r of
        Right (Right (Right i)) -> putStrLn $ "result: " ++ show i
        e -> putStrLn $ show e
    --
-   r <- runTcpTransport "localhost" "26060" $ 
+   r <- runTcp "localhost" "26060" $ 
             hoist (flip runReaderT 77) $
-                runJSONClient tcpTransport jsonRPC20 exampleClient2
+                runJSONClient tcp jsonRPC20 exampleClient2
    case r of
        Right (Right (Right i)) -> putStrLn $ "result: " ++ show i
        e -> putStrLn $ show e

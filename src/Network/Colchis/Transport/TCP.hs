@@ -8,9 +8,9 @@
 
 module Network.Colchis.Transport.TCP (
         module Network.Colchis.Transport
-    ,   TcpTransport
-    ,   tcpTransport
-    ,   runTcpTransport
+    --,   TcpState
+    ,   tcp
+    ,   runTcp
     ,   TransportError(..)
     ,   ParsingError(..)
     )  where
@@ -42,7 +42,7 @@ import Pipes.Aeson.Unchecked
 
 import Network.Colchis.Transport
 
-type TcpTransport = ReaderT (MVar (Maybe Value),MVar Value,IORef ConnState)  
+type TcpState = ReaderT (MVar (Maybe Value),MVar Value,IORef ConnState)  
 
 data TransportError =
           RequestParsingError ParsingError
@@ -70,8 +70,8 @@ producerFromMVar reqMVar = go
 consumerFromMVar :: MVar a -> Consumer a IO x 
 consumerFromMVar respMVar = forever $ await >>= liftIO . putMVar respMVar 
 
-tcpTransport :: Transport TcpTransport m
-tcpTransport = go
+tcp :: Transport TcpState m
+tcp = go
   where
     go req = do
         (reqMVar,respMVar,connState) <- lift ask
@@ -82,8 +82,8 @@ tcpTransport = go
         respond resp >>= go 
 
 
-runTcpTransport :: HostName -> ServiceName -> TcpTransport IO r -> IO (Either TransportError r) 
-runTcpTransport host port transport = 
+runTcp :: HostName -> ServiceName -> TcpState IO r -> IO (Either TransportError r) 
+runTcp host port transport = 
     withSocketsDo $ connect host port $ \(sock,sockaddr) -> do
         reqMVar <- newEmptyMVar
         respMVar <- newEmptyMVar
