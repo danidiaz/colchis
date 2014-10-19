@@ -7,7 +7,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Network.Colchis.Transport.TCP (
-        TcpTransport
+        module Network.Colchis.Transport
+    ,   TcpTransport
     ,   tcpTransportServer 
     ,   runTcpTransport
     ,   TransportError(..)
