@@ -28,7 +28,7 @@ import Control.Monad.Trans.Except
 import Control.Monad.Trans.State.Strict
 import Control.Concurrent.MVar
 import Control.Concurrent.Conceit
-import Network.Socket (close)
+import Network.Socket (shutdown,ShutdownCmd(ShutdownBoth))
 import Pipes
 import Pipes.Attoparsec
 import Pipes.Core
@@ -96,7 +96,7 @@ runTcpTransport host port transport =
                 <*
                 putMVar reqMVar Nothing
                 <* 
-                close sock
+                liftIO ( shutdown sock ShutdownBoth )
             )
             <*
             (Conceit $ fmap pure $ runEffect $
