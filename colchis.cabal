@@ -24,6 +24,7 @@ Library
         Network.Colchis.Adapter.JSONRPC20
         Network.Colchis.Adapter.JSONRPC20.Request
         Network.Colchis.Adapter.JSONRPC20.Response
+        Network.Colchis.Transport
         Network.Colchis.Transport.TCP
     other-modules: 
     build-depends:         
@@ -51,6 +52,7 @@ Library
         semigroups >= 0.15 && < 0.16,
         conceit >= 0.1 && < 0.2,
         network
+--        mtl >= 2.2
 
 Source-repository head
     type:     git

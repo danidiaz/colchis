@@ -7,8 +7,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Network.Colchis.Transport.TCP (
-        TcpTransportServer
-    ,   TcpTransport
+        TcpTransport
     ,   tcpTransportServer 
     ,   runTcpTransport
     ,   TransportError(..)
@@ -41,9 +40,9 @@ import qualified Pipes.Prelude as P
 import Pipes.Aeson
 import Pipes.Aeson.Unchecked
 
-type TcpTransport m = ReaderT (MVar (Maybe Value),MVar Value,IORef ConnState) m 
+import Network.Colchis.Transport
 
-type TcpTransportServer m = (MonadIO m) => forall r. Value -> Server Value Value (TcpTransport m) r
+type TcpTransport = ReaderT (MVar (Maybe Value),MVar Value,IORef ConnState)  
 
 data TransportError =
           RequestParsingError ParsingError
@@ -71,7 +70,7 @@ producerFromMVar reqMVar = go
 consumerFromMVar :: MVar a -> Consumer a IO x 
 consumerFromMVar respMVar = forever $ await >>= liftIO . putMVar respMVar 
 
-tcpTransportServer :: TcpTransportServer m
+tcpTransportServer :: TransportServer TcpTransport m
 tcpTransportServer = go
   where
     go req = do

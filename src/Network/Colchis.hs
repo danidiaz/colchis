@@ -1,14 +1,17 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Network.Colchis (
-        JSONClient (..)
+        JSONClientError (..)
+   ,    JSONClient (..)
    ,    call
+   ,    Adapter
+   ,    TransportServer
+   ,    runJSONClient
    ,    umap
    ,    umapM
    )  where
@@ -24,7 +27,12 @@ import Pipes.Lift
 import qualified Pipes.Prelude as P
 import Pipes.Aeson
 
-type JSONClient s m r = Client (s,Value) Value (ExceptT (Text,Value) m) r  
+import Network.Colchis.Adapter
+import Network.Colchis.Transport
+
+type JSONClientError = (Text,Value)
+
+type JSONClient s m r = Client (s,Value) Value (ExceptT JSONClientError m) r  
 
 call :: (ToJSON a, FromJSON r, Monad m) => s -> a -> JSONClient s m r  
 call s a = do
@@ -43,5 +51,14 @@ umapM f = go
   where
     go b = lift (f b) >>= request >>= respond >>= go
 
-
-
+runJSONClient :: (MonadTrans t, MFunctor t, MonadIO m) => Adapter s ea m -> TransportServer t m -> (forall a. m a -> IO a) -> (forall a. t IO a -> IO (Either et a)) -> JSONClient s m r -> IO (Either et (Either ea (Either JSONClientError r))) 
+runJSONClient adapter server morphism runTransport client = 
+    runTransport $
+    hoist morphism $
+    runExceptT $ 
+    runExceptT $
+    runEffect $
+    foo 
+  where
+    --foo:: Effect (ExceptT JSONClientError (ExceptT ea (t m))) r
+    foo = hoist (lift.lift) . server +>> hoist (lift.hoist lift) . adapter +>> hoist (hoist (lift.lift)) client
