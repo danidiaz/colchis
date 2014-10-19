@@ -26,7 +26,6 @@ import Control.Monad.Trans.Reader
 import Control.Monad.Trans.Except
 import Control.Monad.Trans.State.Strict
 import Control.Concurrent.MVar
-import Control.Concurrent.Async
 import Control.Concurrent.Conceit
 import Network.Socket (close)
 import Pipes

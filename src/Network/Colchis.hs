@@ -51,7 +51,7 @@ umapM f = go
   where
     go b = lift (f b) >>= request >>= respond >>= go
 
-runJSONClient :: (MonadTrans t, MFunctor t, MonadIO m) => Adapter s ea m -> TransportServer t m -> (forall a. m a -> IO a) -> (forall a. t IO a -> IO (Either et a)) -> JSONClient s m r -> IO (Either et (Either ea (Either JSONClientError r))) 
+runJSONClient :: (MonadTrans t, MFunctor t, MonadIO m, Monad (t m)) => Adapter s ea m -> TransportServer t m -> (forall a. m a -> IO a) -> (forall a. t IO a -> IO (Either et a)) -> JSONClient s m r -> IO (Either et (Either ea (Either JSONClientError r))) 
 runJSONClient adapter server morphism runTransport client = 
     runTransport $
     hoist morphism $
