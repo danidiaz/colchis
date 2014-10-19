@@ -7,9 +7,13 @@ import Network.Colchis
 import Network.Colchis.Adapter.JSONRPC20
 import Network.Colchis.Transport.TCP
 
+import Control.Monad.IO.Class
+import Control.Concurrent(threadDelay)
+
 exampleClient :: JSONClient Text IO Int
 exampleClient = do
     i1 <- plusone 5 
+    --liftIO $ threadDelay $ 10 * 10^6
     i2 <- plusone 7 
     return $ i1+i2
   where 
