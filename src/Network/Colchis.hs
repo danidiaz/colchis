@@ -6,14 +6,20 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Network.Colchis (
+        -- * Client 
         JSONClient (..)
    ,    JSONClientError (..)
    ,    call
+        -- * Protocol 
    ,    Protocol
+        -- * Transport
    ,    Transport
+        -- * Running clients
    ,    runJSONClient
+        -- * Utils
    ,    umap
    ,    umapM
+        -- * Re-exported
    ,    hoist
    )  where
 
