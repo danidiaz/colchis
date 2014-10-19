@@ -31,15 +31,16 @@ import Pipes.Aeson
 import Network.Colchis.Protocol
 import Network.Colchis.Transport
 
-type JSONClientError = (Text,Value)
+type JSONClientError = (Value,Text,Value)
 
 type JSONClient s m r = Client (s,Value) Value (ExceptT JSONClientError m) r  
 
 call :: (ToJSON a, FromJSON r, Monad m) => s -> a -> JSONClient s m r  
 call s a = do
-    rj <- request (s,toJSON a)
+    let jreq = toJSON a
+    rj <- request (s,jreq)
     case fromJSON rj of
-        Error msg -> lift $ throwE (pack msg,rj)     
+        Error msg -> lift $ throwE (jreq,pack msg,rj)     
         Success r -> return r     
 
 umap :: Monad m => (b' -> a') -> b' -> Proxy a' x b' x m r
