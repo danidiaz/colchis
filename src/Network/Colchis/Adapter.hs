@@ -21,5 +21,5 @@ import Pipes.Lift
 import qualified Pipes.Prelude as P
 import Pipes.Aeson
 
-type Adapter s e m = forall r. (s,Value) -> Proxy Value Value (s,Value) Value (ExceptT e m) r
+type Adapter s m e = forall r. (s,Value) -> Proxy Value Value (s,Value) Value (ExceptT e m) r
 

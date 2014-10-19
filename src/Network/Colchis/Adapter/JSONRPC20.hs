@@ -33,7 +33,7 @@ data JSONRPC20Error =
        deriving (Show)
 
 -- http://www.jsonrpc.org/specification
-jsonRPC20 :: Monad m => Adapter Text (Text,Value,JSONRPC20Error) m
+jsonRPC20 :: Monad m => Adapter Text m (Text,Value,JSONRPC20Error)
 jsonRPC20 = evalStateP 0 `liftM` go 
   where
     go (method,mkStructured -> j) = do 

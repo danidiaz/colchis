@@ -6,14 +6,15 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Network.Colchis (
-        JSONClientError (..)
-   ,    JSONClient (..)
+        JSONClient (..)
+   ,    JSONClientError (..)
    ,    call
    ,    Adapter
    ,    TransportServer
    ,    runJSONClient
    ,    umap
    ,    umapM
+   ,    hoist
    )  where
 
 import Data.Text
@@ -51,14 +52,9 @@ umapM f = go
   where
     go b = lift (f b) >>= request >>= respond >>= go
 
-runJSONClient :: (MonadTrans t, MFunctor t, MonadIO m, Monad (t m)) => Adapter s ea m -> TransportServer t m -> (forall a. m a -> IO a) -> (forall a. t IO a -> IO (Either et a)) -> JSONClient s m r -> IO (Either et (Either ea (Either JSONClientError r))) 
-runJSONClient adapter server morphism runTransport client = 
-    runTransport $
-    hoist morphism $
+runJSONClient :: (MonadTrans t, MFunctor t, MonadIO m, Monad (t m)) => TransportServer t m -> Adapter s m ea -> JSONClient s m r -> t m (Either ea (Either JSONClientError r)) 
+runJSONClient server adapter client = 
     runExceptT $ 
     runExceptT $
     runEffect $
-    foo 
-  where
-    --foo:: Effect (ExceptT JSONClientError (ExceptT ea (t m))) r
-    foo = hoist (lift.lift) . server +>> hoist (lift.hoist lift) . adapter +>> hoist (hoist (lift.lift)) client
+    hoist (lift.lift) . server +>> hoist (lift.hoist lift) . adapter +>> hoist (hoist (lift.lift)) client
