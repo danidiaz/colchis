@@ -9,7 +9,7 @@ module Network.Colchis (
         JSONClient (..)
    ,    JSONClientError (..)
    ,    call
-   ,    Adapter
+   ,    Protocol
    ,    Transport
    ,    runJSONClient
    ,    umap
@@ -28,7 +28,7 @@ import Pipes.Lift
 import qualified Pipes.Prelude as P
 import Pipes.Aeson
 
-import Network.Colchis.Adapter
+import Network.Colchis.Protocol
 import Network.Colchis.Transport
 
 type JSONClientError = (Text,Value)
@@ -52,7 +52,7 @@ umapM f = go
   where
     go b = lift (f b) >>= request >>= respond >>= go
 
-runJSONClient :: (MonadTrans t, MFunctor t, MonadIO m, Monad (t m)) => Transport t m -> Adapter s m ea -> JSONClient s m r -> t m (Either ea (Either JSONClientError r)) 
+runJSONClient :: (MonadTrans t, MFunctor t, MonadIO m, Monad (t m)) => Transport t m -> Protocol s m ea -> JSONClient s m r -> t m (Either ea (Either JSONClientError r)) 
 runJSONClient server adapter client = 
     runExceptT $ 
     runExceptT $
