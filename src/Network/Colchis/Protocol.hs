@@ -1,25 +1,20 @@
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE Rank2Types #-}
 
 module Network.Colchis.Protocol (
         Protocol(..)        
     )  where
 
-import Data.Text
 import Data.Aeson
-import Control.Monad
 import Control.Monad.Trans.Except
-import Control.Monad.Trans.State.Strict
 import Pipes
-import Pipes.Core
-import Pipes.Lift
-import qualified Pipes.Prelude as P
-import Pipes.Aeson
 
+
+{-|
+  A bidirectional `Proxy` waiting for a request, ready to be composed with `+>>` or `>+>`.
+
+  `Protocol`s format incoming requests from downstream before sending them upstream. They also extract the values from returning protocol responses and send them downstream.
+
+  `Protocol`s isolate clients from the specific details of each protocol. 
+-}
 type Protocol s m e = forall r. (s,Value) -> Proxy Value Value (s,Value) Value (ExceptT e m) r
 

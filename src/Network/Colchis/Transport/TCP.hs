@@ -1,22 +1,14 @@
 {-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE Rank2Types #-}
 
 module Network.Colchis.Transport.TCP (
         module Network.Colchis.Transport
-    --,   TcpState
     ,   tcp
     ,   runTcp
     ,   TransportError(..)
     ,   ParsingError(..)
     )  where
 
-import Data.Bifunctor
-import Data.Text
 import Data.Aeson
 import Data.Aeson.Encode
 import Data.IORef
@@ -25,18 +17,16 @@ import Control.Applicative
 import Control.Monad
 import Control.Monad.Trans.Reader
 import Control.Monad.Trans.Except
-import Control.Monad.Trans.State.Strict
 import Control.Concurrent.MVar
 import Control.Concurrent.Conceit
 import Network.Socket (shutdown,ShutdownCmd(ShutdownBoth))
 import Pipes
-import Pipes.Attoparsec
+import Pipes.Attoparsec (ParsingError(..))
 import Pipes.Core
 import Pipes.Lift
 import Pipes.Internal (unsafeHoist)
 import Pipes.ByteString as PB
 import Pipes.Network.TCP
-import qualified Pipes.Prelude as P
 import Pipes.Aeson
 import Pipes.Aeson.Unchecked
 

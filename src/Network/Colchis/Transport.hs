@@ -1,24 +1,17 @@
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE Rank2Types #-}
 
 module Network.Colchis.Transport (
         Transport(..)        
     )  where
 
-import Data.Text
 import Data.Aeson
-import Control.Monad
+import Control.Monad.IO.Class
 import Control.Monad.Trans.Except
-import Control.Monad.Trans.State.Strict
-import Pipes
 import Pipes.Core
-import Pipes.Lift
-import qualified Pipes.Prelude as P
-import Pipes.Aeson
 
+{-|
+  A pipes `Server` waiting for a request, ready to be composed with `+>>` or `>+>`.
+
+  `Transport`s send requests over the wire and receive the responses.
+-}
 type Transport t m = (MonadIO m) => forall r. Value -> Server Value Value (t m) r
