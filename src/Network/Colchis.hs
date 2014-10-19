@@ -20,6 +20,7 @@ module Network.Colchis (
    ,    umap
    ,    umapM
         -- * Re-exported
+        -- $reexports
    ,    hoist
    )  where
 
@@ -65,3 +66,9 @@ runJSONClient server adapter client =
     runExceptT $
     runEffect $
     hoist (lift.lift) . server +>> hoist (lift.hoist lift) . adapter +>> hoist (hoist (lift.lift)) client
+
+{- $reexports
+  
+ When the function that runs the transport layer requires the underlying monad to be whittled down to `IO`, `hoist` (in combination with a suitable monad morphism) can come in handy.
+
+-} 
