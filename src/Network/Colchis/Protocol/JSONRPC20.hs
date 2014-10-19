@@ -4,9 +4,9 @@
 
 module Network.Colchis.Protocol.JSONRPC20 (
       module Network.Colchis.Protocol
-    , IN.ErrorObject (..)
-    , JSONRPC20Error (..)
     , jsonRPC20  
+    , JSONRPC20Error (..)
+    , IN.ErrorObject (..)
     ) where
 
 import Network.Colchis.Protocol
