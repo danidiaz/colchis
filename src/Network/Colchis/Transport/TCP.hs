@@ -25,7 +25,6 @@ import Pipes.Attoparsec (ParsingError(..))
 import Pipes.Core
 import Pipes.Lift
 import Pipes.Internal (unsafeHoist)
-import Pipes.ByteString as PB
 import Pipes.Network.TCP
 import Pipes.Aeson
 import Pipes.Aeson.Unchecked

@@ -12,7 +12,7 @@ import Network.Colchis.Protocol
 import qualified Network.Colchis.Protocol.JSONRPC20.Request as OUT
 import qualified Network.Colchis.Protocol.JSONRPC20.Response as IN 
 
-import Data.Text
+import Data.Text (Text,pack)
 import Data.Aeson
 import Data.Aeson.Types
 import Control.Monad

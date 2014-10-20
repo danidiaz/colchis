@@ -1,5 +1,5 @@
 name:          colchis
-version:       0.1.0.0
+version:       0.2.0.0
 license:       BSD3
 license-file:  LICENSE
 data-files:    
@@ -29,19 +29,15 @@ Library
     other-modules: 
     build-depends:         
         base >= 4.4 && < 5,
-        transformers >= 0.2 && < 0.5,
-        transformers-compat == 0.3.*,
-        bifunctors >= 4.1 && < 5,
+        transformers >= 0.4 && < 0.5,
         pipes >= 4.1.2 && < 4.2,
-        pipes-bytestring >= 2.1.0 && < 2.2,
         pipes-attoparsec == 0.5.*,
         pipes-aeson >= 0.4 && < 0.5,
-        pipes-network >= 0.6 && < 0.7,
+        pipes-network >= 0.6.4 && < 0.7,
         aeson >=0.7 && < 0.9,
         text >= 0.11.2 && < 1.2,
-        void >= 0.6 && < 0.7,
         conceit >= 0.1 && < 0.2,
-        network
+        network >= 2.4
 
 Source-repository head
     type:     git
