@@ -1,5 +1,5 @@
 name:          colchis
-version:       0.2.0.0
+version:       0.2.0.1
 license:       BSD3
 license-file:  LICENSE
 data-files:    
@@ -34,6 +34,7 @@ Library
         pipes-attoparsec == 0.5.*,
         pipes-aeson >= 0.4 && < 0.5,
         pipes-network >= 0.6.4 && < 0.7,
+        network-simple >= 0.4.0.2 && <= 0.5,
         aeson >=0.7 && < 0.9,
         text >= 0.11.2 && < 1.2,
         conceit >= 0.1 && < 0.2,
