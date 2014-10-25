@@ -78,7 +78,7 @@ runTcp host port transport =
         respMVar <- newEmptyMVar
         connState <- newIORef Idle 
         runConceit $ 
-            (Conceit $ fmap pure $ do
+            (_Conceit $ do
                 flip runReaderT (reqMVar,respMVar,connState) transport
                 <*
                 atomicWriteIORef connState Finished
@@ -88,7 +88,7 @@ runTcp host port transport =
                 liftIO ( shutdown sock ShutdownBoth )
             )
             <*
-            (Conceit $ fmap pure $ runEffect $
+            (_Conceit $ runEffect $
                 for (producerFromMVar reqMVar) 
                     (yield . Data.Aeson.Encode.encode)
                 >->
