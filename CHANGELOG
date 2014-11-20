@@ -1,3 +1,7 @@
+0.2.0.3
+=======
+    - Allow text 1.2.
+
 0.2.0.1
 =======
     - Dependency bump in network-simple that solves Windows compilation
@@ -7,4 +11,4 @@
 =======
 
     - Removed some unused dependencies.
-    - Bumped the mininum required trasnformers version.
+    - Bumped the mininum required transformers version.
